@@ -13,9 +13,10 @@ const App: React.FC = () => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [scales, setScales] = useState<ServiceScale[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Carregar dados na inicialização
   useEffect(() => {
-    // Chaves de armazenamento mais específicas para evitar colisões
     const savedSongs = localStorage.getItem('canaa_v2_songs');
     const savedParticipants = localStorage.getItem('canaa_v2_participants');
     const savedScales = localStorage.getItem('canaa_v2_scales');
@@ -28,13 +29,18 @@ const App: React.FC = () => {
 
     if (savedParticipants) setParticipants(JSON.parse(savedParticipants));
     if (savedScales) setScales(JSON.parse(savedScales));
+    
+    setIsLoaded(true);
   }, []);
 
+  // Salvar dados apenas APÓS o carregamento inicial e quando houver mudanças
   useEffect(() => {
+    if (!isLoaded) return;
+    
     localStorage.setItem('canaa_v2_songs', JSON.stringify(songs));
     localStorage.setItem('canaa_v2_participants', JSON.stringify(participants));
     localStorage.setItem('canaa_v2_scales', JSON.stringify(scales));
-  }, [songs, participants, scales]);
+  }, [songs, participants, scales, isLoaded]);
 
   const addSong = (newSong: Omit<Song, 'id'>) => {
     const song: Song = { ...newSong, id: Math.random().toString(36).substr(2, 9) };
@@ -77,12 +83,22 @@ const App: React.FC = () => {
     }
   };
 
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white font-bold tracking-widest uppercase text-xs">Carregando Canaã...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="bg-gradient-to-br from-[#0c4a6e] via-[#164e63] to-[#1e1b4b] text-white shadow-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* Logo estilizada baseada na imagem enviada, sem o círculo */}
             <svg viewBox="0 0 100 100" className="w-12 h-12 fill-white opacity-90 drop-shadow-md">
               <path d="M50 10c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 75c-19.3 0-35-15.7-35-35s15.7-35 35-35 35 15.7 35 35-15.7 35-35 35z" opacity=".2"/>
               <path d="M75 45c-2 0-4 1-5 3-2-5-7-8-12-8-3 0-6 1-8 4-2-3-5-4-8-4-5 0-10 3-12 8-1 2-3 3-5 3v4c3 0 6-2 7-5 2 5 7 8 12 8 3 0 6-1 8-4 2 3 5 4 8 4 5 0 10-3 12-8 1-2 3-3 5-3v-4z" opacity=".8"/>
